@@ -91,12 +91,11 @@ class Game:
     def winner(self):
         return self._winner
     
-
     def is_winning_move(self, move_idx: Tuple[int]) -> bool:
         lchip = self.board[move_idx]
         chip_idxs = self.board.chip_idxs[lchip]
         lmrow, lmcol = move_idx
-        for dr, dc in product(range(2), range(2)):
+        for dr, dc in ((1, 0), (1, 1), (0, 1), (1, -1)):
             if dr == dc == 0:
                 continue
             consec = 1
