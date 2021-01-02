@@ -8,8 +8,7 @@ from itertools import product, cycle
 
 class Board(np.ndarray):
     def __new__(cls):
-        obj = np.zeros((6, 7)).view(cls)
-        return obj
+        return np.zeros((6, 7)).view(cls)
 
     def __init__(self):
         self._chip_idxs = defaultdict(set)
@@ -35,6 +34,10 @@ class Board(np.ndarray):
 
 
 class Player(metaclass=ABCMeta):
+    def __init__(self, pnum, board):
+        self._num = pnum
+        self._board = board
+
     @abstractmethod
     def move(self):
         '''
@@ -76,10 +79,12 @@ class Game:
                 return True
         return False
 
-    def start(self):
+    def start(self, verbose=False):
         for pnum in cycle((1, 2)):
             col = self._pnum2player[pnum].move()
             self._last_move = self.board.place_chip(pnum, col)
+            if verbose:
+                print(self.board)
             if isboardfull():
                 break
             if is_last_move_winning():
