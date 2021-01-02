@@ -61,7 +61,7 @@ class Player(metaclass=ABCMeta):
 
 class CLIPlayer(Player):
     def __init__(self, pnum):
-        self._num = pnum
+        super().__init__(pnum)
 
     def move(self):
         move = None
@@ -111,16 +111,16 @@ class Game:
                 return True
         return False
 
-    def start(self, verbose=False):
+    def play(self, verbose=False):
         for pnum in cycle((1, 2)):
-            col = self._pnum2player[pnum].move()
-            last_move = self.board.place_chip(pnum, col)
+            column = self._pnum2player[pnum].move()
+            last_move = self.board.place_chip(pnum, column)
             if verbose:
                 print(self.board)
-            if self.board.isfull():
-                break
             if self.is_winning_move(last_move):
                 self._winner = pnum
+                break
+            if self.board.isfull():
                 break
 
         if verbose:
