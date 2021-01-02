@@ -29,7 +29,7 @@ class Board(np.ndarray):
         self._chip_idxs[chip].add(chip_idx)
         return chip_idx
 
-    def isfull(board):
+    def isfull(self):
         return np.all(self)
 
 
@@ -68,10 +68,10 @@ class CLIPlayer(Player):
         while move is None:
             try:
                 move = int(input('Where would you like to place the chip? (Column #): '))
-                if (move not in range(self._board.shape[1]) or
-                        0 not in self._board[:, move_]):
+                if (not 0 <= move < self._board.shape[1] or
+                        0 not in self._board[:, move]):
                     print('Move is invalid')
-                    continue
+                    move = None
             except ValueError:
                 print('Please enter an integer')
         return move
@@ -87,12 +87,15 @@ class Game:
         self._pnum2player = {1: player_1, 2: player_2}
         self._winner = None
 
-    def is_winning_move(self, move_idx) -> bool:
-        if self._last_move == (None, None):
-            return False
-        lchip = self.board[self._last_move]
+    @property
+    def winner(self):
+        return self._winner
+    
+
+    def is_winning_move(self, move_idx: Tuple[int]) -> bool:
+        lchip = self.board[move_idx]
         chip_idxs = self.board.chip_idxs[lchip]
-        lmrow, lmcol = self._last_move
+        lmrow, lmcol = move_idx
         for dr, dc in product(range(2), range(2)):
             if dr == dc == 0:
                 continue
@@ -117,8 +120,9 @@ class Game:
                 print(self.board)
             if self.board.isfull():
                 break
-            if is_winning_move(last_move):
+            if self.is_winning_move(last_move):
                 self._winner = pnum
+                break
 
         if verbose:
-            print('Tie' is self._winner is None else f'Player {self._winner} wins!')
+            print('Tie' if self._winner is None else f'Player {self._winner} wins!')
