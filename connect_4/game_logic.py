@@ -41,7 +41,7 @@ class Player(metaclass=ABCMeta):
     @property
     def num(self):
         return self._num
-    
+
     @property
     def board(self):
         return self._board
@@ -49,7 +49,7 @@ class Player(metaclass=ABCMeta):
     @board.setter
     def board(self, board: Board):
         assert isinstance(board, Board)
-        self._board = board    
+        self._board = board
 
     @abstractmethod
     def move(self):
@@ -67,9 +67,9 @@ class CLIPlayer(Player):
         move = None
         while move is None:
             try:
-                move = int(input('Where would you like to place the chip? (Column #): '))
+                move = int(input('Enter a column number to place chip: '))
                 if (not 0 <= move < self._board.shape[1] or
-                        0 not in self._board[:, move]):
+                        np.all(self._board[:, move])):
                     print('Move is invalid')
                     move = None
             except ValueError:
@@ -90,14 +90,12 @@ class Game:
     @property
     def winner(self):
         return self._winner
-    
+
     def is_winning_move(self, move_idx: Tuple[int]) -> bool:
         lchip = self.board[move_idx]
         chip_idxs = self.board.chip_idxs[lchip]
         lmrow, lmcol = move_idx
         for dr, dc in ((1, 0), (1, 1), (0, 1), (1, -1)):
-            if dr == dc == 0:
-                continue
             consec = 1
             for off in range(1, 4):
                 if (lmrow + dr * off, lmcol + dc * off) not in chip_idxs:
