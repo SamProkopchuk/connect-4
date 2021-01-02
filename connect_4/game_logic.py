@@ -19,7 +19,7 @@ class Board(np.ndarray):
 
     def place_chip(self, chip: int, column: int) -> Tuple[int]:
         if chip not in (1, 2):
-            raise ValueError(f'Chip must be player {1} or {2}\'s')
+            raise ValueError(f'Chip must be player 1 or 2\'s')
         if 0 not in self[:, column]:
             raise ValueError((f'Cannot place chip in column {column}: ' +
                               'it is already full'))
@@ -30,7 +30,7 @@ class Board(np.ndarray):
         return chip_idx
 
     def isfull(board):
-        return np.any(self == 0)
+        return np.all(self)
 
 
 class Player(metaclass=ABCMeta):
@@ -59,6 +59,24 @@ class Player(metaclass=ABCMeta):
         pass
 
 
+class CLIPlayer(Player):
+    def __init__(self, pnum):
+        self._num = pnum
+
+    def move(self):
+        move = None
+        while move is None:
+            try:
+                move = int(input('Where would you like to place the chip? (Column #): '))
+                if (move not in range(self._board.shape[1]) or
+                        0 not in self._board[:, move_]):
+                    print('Move is invalid')
+                    continue
+            except ValueError:
+                print('Please enter an integer')
+        return move
+
+
 class Game:
     def __init__(self, player_1: Player, player_2: Player):
         assert player_1.num == 1
@@ -67,10 +85,9 @@ class Game:
         player_1.board = self.board
         player_2.board = self.board
         self._pnum2player = {1: player_1, 2: player_2}
-        self._last_move = (None, None)
         self._winner = None
 
-    def is_last_move_winning(self) -> bool:
+    def is_winning_move(self, move_idx) -> bool:
         if self._last_move == (None, None):
             return False
         lchip = self.board[self._last_move]
@@ -95,10 +112,13 @@ class Game:
     def start(self, verbose=False):
         for pnum in cycle((1, 2)):
             col = self._pnum2player[pnum].move()
-            self._last_move = self.board.place_chip(pnum, col)
+            last_move = self.board.place_chip(pnum, col)
             if verbose:
                 print(self.board)
-            if isboardfull():
+            if self.board.isfull():
                 break
-            if is_last_move_winning():
+            if is_winning_move(last_move):
                 self._winner = pnum
+
+        if verbose:
+            print('Tie' is self._winner is None else f'Player {self._winner} wins!')
