@@ -34,9 +34,22 @@ class Board(np.ndarray):
 
 
 class Player(metaclass=ABCMeta):
-    def __init__(self, pnum, board):
+    def __init__(self, pnum):
         self._num = pnum
-        self._board = board
+        self._board = None
+
+    @property
+    def num(self):
+        return self._num
+    
+    @property
+    def board(self):
+        return self._board
+
+    @board.setter
+    def board(self, board: Board):
+        assert isinstance(board, Board)
+        self._board = board    
 
     @abstractmethod
     def move(self):
@@ -48,12 +61,11 @@ class Player(metaclass=ABCMeta):
 
 class Game:
     def __init__(self, player_1: Player, player_2: Player):
-        assert isinstance(player_1, Player)
-        assert isinstance(player_2, Player)
+        assert player_1.num == 1
+        assert player_2.num == 2
         self.board = Board()
-
-        player_1.setboard(self.board)
-        player_2.setboard(self.board)
+        player_1.board = self.board
+        player_2.board = self.board
         self._pnum2player = {1: player_1, 2: player_2}
         self._last_move = (None, None)
         self._winner = None
@@ -61,18 +73,19 @@ class Game:
     def is_last_move_winning(self) -> bool:
         if self._last_move == (None, None):
             return False
-        lmrow, lmcol = self.board[self._last_move]
-        chip_idxs = self.board.chip_idxs[chip]
+        lchip = self.board[self._last_move]
+        chip_idxs = self.board.chip_idxs[lchip]
+        lmrow, lmcol = self._last_move
         for dr, dc in product(range(2), range(2)):
             if dr == dc == 0:
                 continue
             consec = 1
             for off in range(1, 4):
-                if (lmrow + dr * off, lmrow + dc * off) not in chip_idxs:
+                if (lmrow + dr * off, lmcol + dc * off) not in chip_idxs:
                     break
                 consec += 1
             for off in range(-1, -4, -1):
-                if (lmrow + dr * off, lmrow + dc * off) not in chip_idxs:
+                if (lmrow + dr * off, lmcol + dc * off) not in chip_idxs:
                     break
                 consec += 1
             if consec >= 4:
