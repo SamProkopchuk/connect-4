@@ -1,7 +1,7 @@
 import numpy as np
 
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, DefaultDict, Dict, Optional
+from typing import Tuple, DefaultDict, Dict, Optional, Type
 from collections import defaultdict
 from itertools import cycle
 
@@ -34,22 +34,17 @@ class Board(np.ndarray):
 
 
 class Player(metaclass=ABCMeta):
-    def __init__(self, pnum: int):
+    def __init__(self, pnum: int, board: Board):
         self._num: int = pnum
-        self._board: Optional[Board] = None
+        self._board: Board = board
 
     @property
     def num(self) -> int:
         return self._num
 
     @property
-    def board(self) -> Optional[Board]:
+    def board(self) -> Board:
         return self._board
-
-    @board.setter
-    def board(self, board: Board) -> None:
-        assert isinstance(board, Board)
-        self._board = board
 
     @abstractmethod
     def move(self) -> int:
@@ -60,12 +55,10 @@ class Player(metaclass=ABCMeta):
 
 
 class CLIPlayer(Player):
-    def __init__(self, pnum):
-        super().__init__(pnum)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def move(self) -> int:
-        if self._board is None:
-            raise ValueError('Player must be given a board to play moves')
         move = None
         while move is None:
             try:
@@ -80,13 +73,9 @@ class CLIPlayer(Player):
 
 
 class Game:
-    def __init__(self, player_1: Player, player_2: Player):
-        assert player_1.num == 1
-        assert player_2.num == 2
+    def __init__(self, p1_cls: Type[Player], p2_cls: Type[Player]):
         self.board: Board = Board()
-        player_1.board = self.board
-        player_2.board = self.board
-        self._pnum2player: Dict[int, Player] = {1: player_1, 2: player_2}
+        self._pnum2player: Dict[int, Player] = {1: p1_cls(1, self.board), 2: p2_cls(2, self.board)}
         self._winner: Optional[int] = None
 
     @property
