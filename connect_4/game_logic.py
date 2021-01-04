@@ -8,7 +8,7 @@ from itertools import cycle
 
 class Board(np.ndarray):
     def __new__(cls):
-        return np.zeros((6, 7)).view(cls)
+        return np.zeros((6, 7), dtype=np.uint8).view(cls)
 
     def __init__(self):
         self._chip_idxs: DefaultDict[int, set] = defaultdict(set)
