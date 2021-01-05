@@ -6,6 +6,19 @@ from collections import defaultdict
 from itertools import cycle
 
 
+def consec_direction(pchipidxs: set, r: int, c: int, rd: int, cd: int) -> int:
+    '''
+    Returns the number of row column pairs
+    with (rd, cd) offsets from given r, c
+    '''
+    consec = 1
+    for coef in range(1, 4):
+        if (r + coef * rd, c + coef * cd) not in pchipidxs:
+            break
+        consec += 1
+    return consec
+
+
 class Board(np.ndarray):
     def __new__(cls):
         return np.zeros((6, 7), dtype=np.uint8).view(cls)
@@ -20,7 +33,7 @@ class Board(np.ndarray):
     def place_chip(self, chip: int, column: int) -> Tuple[int, int]:
         if chip not in (1, 2):
             raise ValueError(f'Chip must be player 1 or 2\'s')
-        if 0 not in self[:, column]:
+        if self[:, column].all():
             raise ValueError((f'Cannot place chip in column {column}: ' +
                               'it is already full'))
         row = np.argwhere(self[:, column] == 0).max()
@@ -29,8 +42,21 @@ class Board(np.ndarray):
         self._chip_idxs[chip].add(chip_idx)
         return chip_idx
 
+    def remove_chip(self, column: int) -> None:
+        if not np.any(self[:, column]):
+            raise ValueError('Cannot remove chip from empty column')
+        row = np.argwhere(self[:, column]).min()
+        chip = self[row, column]
+        self[row, column] = 0
+        self._chip_idxs[chip].remove((row, column))
+
     def isfull(self) -> bool:
         return self.all() # type: ignore
+
+    def copy(self):
+        res = np.copy(self).view(Board)
+        res._chip_idxs = self._chip_idxs.copy()
+        return res
 
 
 class Player(metaclass=ABCMeta):
@@ -82,22 +108,15 @@ class Game:
     def winner(self) -> Optional[int]:
         return self._winner
 
-    def is_winning_move(self, move_idx: Tuple[int, int]) -> bool:
-        lchip = self.board[move_idx]
-        chip_idxs = self.board.chip_idxs[lchip]
-        lmrow, lmcol = move_idx
-        for dr, dc in ((1, 0), (1, 1), (0, 1), (1, -1)):
-            consec = 1
-            for off in range(1, 4):
-                if (lmrow + dr * off, lmcol + dc * off) not in chip_idxs:
-                    break
-                consec += 1
-            for off in range(-1, -4, -1):
-                if (lmrow + dr * off, lmcol + dc * off) not in chip_idxs:
-                    break
-                consec += 1
-            if consec >= 4:
-                return True
+    @staticmethod
+    def is_winner(pnum: int, board: Board) -> bool:
+        '''Returns static evaluation of a board given who's move it is'''
+        pchipidxs = board.chip_idxs[pnum]
+        for r, c in pchipidxs:
+            for dr, dc in ((0, 1), (1, 0), (1, 1), (-1, 1)):
+                consec = consec_direction(pchipidxs, r, c, dr, dc)
+                if consec >= 4:
+                    return True
         return False
 
     def play(self, verbose=False) -> None:
@@ -106,10 +125,11 @@ class Game:
             last_move = self.board.place_chip(pnum, column)
             if verbose:
                 print(self.board)
-            if self.is_winning_move(last_move):
+            if Game.is_winner(pnum, self.board):
                 self._winner = pnum
                 break
             if self.board.isfull():
                 break
         if verbose:
             print('Tie' if self._winner is None else f'Player {self._winner} wins!')
+

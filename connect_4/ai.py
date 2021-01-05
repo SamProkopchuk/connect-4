@@ -1,31 +1,17 @@
 import math
 import numpy as np
 
-from collections import deque
-from game_logic import Board, Player
+from collections import deque, defaultdict
+from game_logic import Board, Player, Game, consec_direction
 from typing import Tuple
-from scipy.signal import convolve2d
+from random import choice
 
 
 class MiniMaxAI(Player):
-    FILTERS = {
-        2: [np.ones((1, 2)),
-            np.ones((2, 1)),
-            np.eye(2),
-            np.eye(2)[::-1]],
-        3: [np.ones((1, 3)),
-            np.ones((3, 1)),
-            np.eye(3),
-            np.eye(3)[::-1]],
-        4: [np.ones((1, 4)),
-            np.ones((4, 1)),
-            np.eye(4),
-            np.eye(4)[::-1]]
-    }
-
     CONSEC_WEIGHT = {
+        1: 0,
         2: 1,
-        3: 1<<4,
+        3: 1<<3,
         4: 1<<7
     }
 
@@ -33,31 +19,36 @@ class MiniMaxAI(Player):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def static_eval(board):
-        '''Returns static evaluation of a connect 4 position'''
+    def static_eval(board: Board, pnum: int) -> int:
+        '''Returns static evaluation of a board given who's move it is'''
         res = 0
-        p1view = (board == 1)
-        p2view = (board == 2)
-        for size in MiniMaxAI.FILTERS:
-            for filter_ in MiniMaxAI.FILTERS[size]:
-                p1score = (convolve2d(p1view, filter_, mode='valid') == size).sum()
-                p2score = (convolve2d(p2view, filter_, mode='valid') == size).sum()
-                res += (p1score - p2score) * MiniMaxAI.CONSEC_WEIGHT[size]
+
+        for pnum in range(1, 3):
+            coef = 1 if pnum == 1 else -1
+            pchipidxs = board.chip_idxs[pnum]
+            for r, c in pchipidxs:
+                for dr, dc in ((0, 1), (1, 0), (1, 1), (-1, 1)):
+                    consec = consec_direction(pchipidxs, r, c, dr, dc)
+                    if consec >= 4:
+                        return coef * MiniMaxAI.CONSEC_WEIGHT[4]
+                    else:
+                        res += coef * MiniMaxAI.CONSEC_WEIGHT[consec]
         return res
 
     @staticmethod
-    def minimax(board, pnum, depth: int, maximize: bool):
+    def minimax(board: Board, pnum: int, depth: int, maximize: bool) -> int:
         if depth <= 0:
-            return MiniMaxAI.static_eval(board)
+            return MiniMaxAI.static_eval(board, pnum)
+        elif Game.is_winner(1 + pnum % 2, board):
+            return (1 if pnum == 2 else -1) * math.inf
 
         weights = []
         for move in range(board.shape[1]):
             if board[:, move].all():
                 continue
-            row = np.argwhere(board[:, move] == 0).max()
-            board[row, move] = pnum
+            board.place_chip(pnum, move)
             weights.append(MiniMaxAI.minimax(board, 1 + pnum % 2, depth-1, not maximize))
-            board[row, move] = 0
+            board.remove_chip(move)
 
         if not weights:
             # No moves means at given depth, the board became full.
@@ -69,17 +60,16 @@ class MiniMaxAI(Player):
 
     def move(self):
         maximize = (self.num == 1)
-        weight2move = {}
+        weight2move = defaultdict(list)
         board = self._board.copy()
         for move in range(board.shape[1]):
             if board[:, move].all():
                 continue
-            row = np.argwhere(board[:, move] == 0).max()
-            board[row, move] = self.num
-            weight2move[MiniMaxAI.minimax(board, 1 + self.num % 2, 3, maximize = not maximize)] = move
-            board[row, move] = 0
+            board.place_chip(self.num, move)
+            weight2move[MiniMaxAI.minimax(board, 1 + self.num % 2, 3, not maximize)].append(move)
+            board.remove_chip(move)
         if maximize:
-            move = weight2move[max(weight2move)]
+            move = choice(weight2move[max(weight2move)])
         else:
-            move = weight2move[min(weight2move)]
+            move = choice(weight2move[min(weight2move)])
         return move
