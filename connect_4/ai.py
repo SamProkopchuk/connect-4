@@ -19,11 +19,11 @@ class MiniMaxAI(Player):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def static_eval(board: Board, pnum: int) -> int:
+    def static_eval(board: Board, whosmove: int) -> int:
         '''Returns static evaluation of a board given who's move it is'''
         res = 0
 
-        for pnum in dict.fromkeys([pnum, 1, 2]):
+        for pnum in dict.fromkeys([whosmove, 1, 2]):
             coef = 1 if pnum == 1 else -1
             pchipidxs = board.chip_idxs[pnum]
             for r, c in pchipidxs:
@@ -66,7 +66,7 @@ class MiniMaxAI(Player):
             if board[:, move].all():
                 continue
             board.place_chip(self.num, move)
-            weight2move[MiniMaxAI.minimax(board, 1 + self.num % 2, 3, not maximize)].append(move)
+            weight2move[MiniMaxAI.minimax(board, 1 + self.num % 2, 4, not maximize)].append(move)
             board.remove_chip(move)
         if maximize:
             move = choice(weight2move[max(weight2move)])
