@@ -23,7 +23,7 @@ class MiniMaxAI(Player):
         '''Returns static evaluation of a board given who's move it is'''
         res = 0
 
-        for pnum in range(1, 3):
+        for pnum in dict.fromkeys([pnum, 1, 2]):
             coef = 1 if pnum == 1 else -1
             pchipidxs = board.chip_idxs[pnum]
             for r, c in pchipidxs:
