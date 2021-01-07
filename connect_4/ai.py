@@ -8,14 +8,19 @@ from random import choice
 
 
 class MiniMaxAI(Player):
+    '''
+    AI Player using the MiniMax Algorithm.
+    Consecutive piece counts are used to evaluate a board position.
+    '''
     CONSEC_WEIGHT = {
         1: 0,
         2: 1,
-        3: 1<<3,
-        4: 1<<7
+        3: 1 << 4,
+        4: 1 << 7  # Not inf, to prefer future losses over an immediate loss.
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, maxdepth: int = 4, **kwargs):
+        self.maxdepth = maxdepth
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -35,11 +40,17 @@ class MiniMaxAI(Player):
                         res += coef * MiniMaxAI.CONSEC_WEIGHT[consec]
         return res
 
-    @staticmethod
-    def minimax(board: Board, pnum: int, depth: int, maximize: bool) -> int:
-        if depth <= 0:
+    def minimax(
+            self,
+            board: Board,
+            pnum: int,
+            depth: int,
+            maximize: bool) -> int:
+        if depth >= self.maxdepth:
             return MiniMaxAI.static_eval(board, pnum)
         elif Game.is_winner(1 + pnum % 2, board):
+            # This is to ensure we don't calculate potential moves
+            # for player x when player (1 + x % 2) has already won.
             return (1 if pnum == 2 else -1) * math.inf
 
         weights = []
@@ -47,16 +58,16 @@ class MiniMaxAI(Player):
             if board[:, move].all():
                 continue
             board.place_chip(pnum, move)
-            weights.append(MiniMaxAI.minimax(board, 1 + pnum % 2, depth-1, not maximize))
+            weights.append(
+                self.minimax(
+                    board, 1 + pnum % 2,
+                    depth + 1, not maximize))
             board.remove_chip(move)
 
-        if not weights:
-            # No moves means at given depth, the board became full.
-            return 0
-        elif maximize:
-            return max(weights)
+        if maximize:
+            return max(weights, default=0)
         else:
-            return min(weights)
+            return min(weights, default=0)
 
     def move(self):
         maximize = (self.num == 1)
@@ -66,7 +77,8 @@ class MiniMaxAI(Player):
             if board[:, move].all():
                 continue
             board.place_chip(self.num, move)
-            weight2move[MiniMaxAI.minimax(board, 1 + self.num % 2, 4, not maximize)].append(move)
+            weight2move[self.minimax(
+                board, 1 + self.num % 2, 1, not maximize)].append(move)
             board.remove_chip(move)
         if maximize:
             move = choice(weight2move[max(weight2move)])

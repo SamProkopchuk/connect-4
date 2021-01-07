@@ -1,6 +1,7 @@
 import numpy as np
 
 from abc import ABCMeta, abstractmethod
+from copy import deepcopy
 from typing import Tuple, DefaultDict, Dict, Optional, Type
 from collections import defaultdict
 from itertools import cycle
@@ -9,7 +10,7 @@ from itertools import cycle
 def consec_direction(pchipidxs: set, r: int, c: int, rd: int, cd: int) -> int:
     '''
     Returns the number of row column pairs
-    with (rd, cd) offsets from given r, c
+    with rd, cd (row delta, column delta) offsets from given r, c (row, column)
     '''
     consec = 1
     for coef in range(1, 4):
@@ -20,6 +21,7 @@ def consec_direction(pchipidxs: set, r: int, c: int, rd: int, cd: int) -> int:
 
 
 class Board(np.ndarray):
+    '''Connect 4 board class'''
     def __new__(cls):
         return np.zeros((6, 7), dtype=np.uint8).view(cls)
 
@@ -51,15 +53,17 @@ class Board(np.ndarray):
         self._chip_idxs[chip].remove((row, column))
 
     def isfull(self) -> bool:
-        return self.all() # type: ignore
+        return self.all()  # type: ignore
 
     def copy(self):
         res = np.copy(self).view(Board)
-        res._chip_idxs = self._chip_idxs.copy()
+        res._chip_idxs = deepcopy(self._chip_idxs)
         return res
 
 
 class Player(metaclass=ABCMeta):
+    '''Parent class of any connect 4 player'''
+
     def __init__(self, pnum: int, board: Board):
         self._num: int = pnum
         self._board: Board = board
@@ -81,6 +85,8 @@ class Player(metaclass=ABCMeta):
 
 
 class CLIPlayer(Player):
+    '''Allows one to play a connect 4 game through the command line'''
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -99,9 +105,18 @@ class CLIPlayer(Player):
 
 
 class Game:
-    def __init__(self, p1_cls: Type[Player], p2_cls: Type[Player]):
+    '''Connect 4 game class. Creates and plays connect 4 game instances'''
+
+    def __init__(
+            self,
+            p1_cls: Type[Player],
+            p2_cls: Type[Player],
+            p1_kwargs: Dict[str, object]={},
+            p2_kwargs: Dict[str, object]={}):
         self.board: Board = Board()
-        self._pnum2player: Dict[int, Player] = {1: p1_cls(1, self.board), 2: p2_cls(2, self.board)}
+        self._pnum2player: Dict[int, Player] = {
+            1: p1_cls(1, self.board, **p1_kwargs),
+            2: p2_cls(2, self.board, **p2_kwargs)}
         self._winner: Optional[int] = None
 
     @property
@@ -128,8 +143,7 @@ class Game:
             if Game.is_winner(pnum, self.board):
                 self._winner = pnum
                 break
-            if self.board.isfull():
+            elif self.board.isfull():
                 break
         if verbose:
             print('Tie' if self._winner is None else f'Player {self._winner} wins!')
-
