@@ -3,7 +3,7 @@ import numpy as np
 
 from collections import deque, defaultdict
 from game_logic import Board, Player, Game, consec_direction
-from typing import Tuple
+from typing import Tuple, Optional
 from random import choice
 
 
@@ -16,10 +16,10 @@ class MiniMaxAI(Player):
         1: 0,
         2: 1,
         3: 1 << 4,
-        4: 1 << 7  # Not inf, to prefer future losses over an immediate loss.
+        4: 1 << 8
     }
 
-    def __init__(self, *args, maxdepth: int = 4, **kwargs):
+    def __init__(self, *args, maxdepth: int=5, **kwargs):
         self.maxdepth = maxdepth
         super().__init__(*args, **kwargs)
 
@@ -27,17 +27,13 @@ class MiniMaxAI(Player):
     def static_eval(board: Board, whosmove: int) -> int:
         '''Returns static evaluation of a board given who's move it is'''
         res = 0
-
         for pnum in dict.fromkeys([whosmove, 1, 2]):
             coef = 1 if pnum == 1 else -1
             pchipidxs = board.chip_idxs[pnum]
             for r, c in pchipidxs:
                 for dr, dc in ((0, 1), (1, 0), (1, 1), (-1, 1)):
                     consec = consec_direction(pchipidxs, r, c, dr, dc)
-                    if consec >= 4:
-                        return coef * MiniMaxAI.CONSEC_WEIGHT[4]
-                    else:
-                        res += coef * MiniMaxAI.CONSEC_WEIGHT[consec]
+                    res += coef * MiniMaxAI.CONSEC_WEIGHT[consec]
         return res
 
     def minimax(
@@ -45,43 +41,54 @@ class MiniMaxAI(Player):
             board: Board,
             pnum: int,
             depth: int,
-            maximize: bool) -> int:
-        if depth >= self.maxdepth:
-            return MiniMaxAI.static_eval(board, pnum)
-        elif Game.is_winner(1 + pnum % 2, board):
+            maximize: bool,
+            alpha: int,
+            beta: int) -> Tuple[int, Optional[int]]:
+        '''
+        alpha -> best maximizer value.
+        beta  -> best minimizer value.
+        '''
+        # Player number of the previous player (1 <-> 2):
+        opnum = 1 + pnum % 2
+        if Game.is_winner(opnum, board):
             # This is to ensure we don't calculate potential moves
-            # for player x when player (1 + x % 2) has already won.
-            return (1 if pnum == 2 else -1) * math.inf
+            # for player pnum when previous player already won.
+            # AKA: Is a terminal node
+            return (1 if opnum == 1 else -1) * MiniMaxAI.CONSEC_WEIGHT[4], None
+        if depth >= self.maxdepth:
+            return MiniMaxAI.static_eval(board, pnum), None
 
-        weights = []
+        bestweight = -math.inf if maximize else math.inf
+        bestmove = None
         for move in range(board.shape[1]):
-            if board[:, move].all():
-                continue
-            board.place_chip(pnum, move)
-            weights.append(
-                self.minimax(
+            if board[0, move] == 0:
+                # ^If this column on the board isn't full
+                board.place_chip(pnum, move)
+                weight, _ = self.minimax(
                     board, 1 + pnum % 2,
-                    depth + 1, not maximize))
-            board.remove_chip(move)
-
-        if maximize:
-            return max(weights, default=0)
+                    depth + 1, not maximize,
+                    alpha, beta)
+                board.remove_chip(move)
+                if maximize:
+                    if weight > bestweight:
+                        bestweight, bestmove = weight, move
+                    alpha = max(bestweight, alpha)
+                else:
+                    if weight < bestweight:
+                        bestweight, bestmove = weight, move
+                    beta = min(bestweight, beta)
+                if beta <= alpha:
+                    break
+        if bestmove is None:
+            # This means no moves are valid aka the board is full.
+            return 0, None
         else:
-            return min(weights, default=0)
+            return bestweight, bestmove
 
     def move(self):
-        maximize = (self.num == 1)
-        weight2move = defaultdict(list)
         board = self._board.copy()
-        for move in range(board.shape[1]):
-            if board[:, move].all():
-                continue
-            board.place_chip(self.num, move)
-            weight2move[self.minimax(
-                board, 1 + self.num % 2, 1, not maximize)].append(move)
-            board.remove_chip(move)
-        if maximize:
-            move = choice(weight2move[max(weight2move)])
-        else:
-            move = choice(weight2move[min(weight2move)])
+        eval_, move = self.minimax(
+            board, self.num, depth=0, maximize=(self.num == 1),
+            alpha=-math.inf, beta=math.inf)
+        print(eval_)
         return move

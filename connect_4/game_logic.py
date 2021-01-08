@@ -113,11 +113,15 @@ class Game:
             p2_cls: Type[Player],
             p1_kwargs: Dict[str, object]={},
             p2_kwargs: Dict[str, object]={}):
-        self.board: Board = Board()
+        self._board: Board = Board()
         self._pnum2player: Dict[int, Player] = {
-            1: p1_cls(1, self.board, **p1_kwargs),
-            2: p2_cls(2, self.board, **p2_kwargs)}
+            1: p1_cls(1, self._board, **p1_kwargs),
+            2: p2_cls(2, self._board, **p2_kwargs)}
         self._winner: Optional[int] = None
+
+    @property
+    def board(self):
+        return self._board
 
     @property
     def winner(self) -> Optional[int]:
@@ -137,13 +141,13 @@ class Game:
     def play(self, verbose=False) -> None:
         for pnum in cycle((1, 2)):
             column = self._pnum2player[pnum].move()
-            last_move = self.board.place_chip(pnum, column)
+            last_move = self._board.place_chip(pnum, column)
             if verbose:
-                print(self.board)
-            if Game.is_winner(pnum, self.board):
+                print(self._board)
+            if Game.is_winner(pnum, self._board):
                 self._winner = pnum
                 break
-            elif self.board.isfull():
+            elif self._board.isfull():
                 break
         if verbose:
             print('Tie' if self._winner is None else f'Player {self._winner} wins!')
