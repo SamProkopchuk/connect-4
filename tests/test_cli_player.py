@@ -1,4 +1,4 @@
-from connect_4.game_logic import Game, CLIPlayer
+from connect_4 import Game, CLIPlayer
 
 
 def main():

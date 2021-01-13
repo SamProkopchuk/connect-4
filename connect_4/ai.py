@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 from collections import deque, defaultdict
-from game_logic import Board, Player, Game, consec_direction
+from .game_logic import Board, Player, Game, consec_direction
 from typing import Tuple, Optional
 from random import choice
 
