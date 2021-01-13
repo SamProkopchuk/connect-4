@@ -48,13 +48,13 @@ class MiniMaxAI(Player):
         alpha -> best maximizer value.
         beta  -> best minimizer value.
         '''
-        # Player number of the previous player (1 <-> 2):
-        opnum = 1 + pnum % 2
-        if Game.is_winner(opnum, board):
+        # Player number of the other player (1 <-> 2):
+        onum = 1 + pnum % 2
+        if Game.is_winner(onum, board):
             # This is to ensure we don't calculate potential moves
             # for player pnum when previous player already won.
             # AKA: Is a terminal node
-            return (1 if opnum == 1 else -1) * MiniMaxAI.CONSEC_WEIGHT[4], None
+            return (1 if onum == 1 else -1) * MiniMaxAI.CONSEC_WEIGHT[4], None
         if depth >= self.maxdepth:
             return MiniMaxAI.static_eval(board, pnum), None
 
@@ -65,7 +65,7 @@ class MiniMaxAI(Player):
                 # ^If this column on the board isn't full
                 board.place_chip(pnum, move)
                 weight, _ = self.minimax(
-                    board, 1 + pnum % 2,
+                    board, onum,
                     depth + 1, not maximize,
                     alpha, beta)
                 board.remove_chip(move)
@@ -90,5 +90,4 @@ class MiniMaxAI(Player):
         eval_, move = self.minimax(
             board, self.num, depth=0, maximize=(self.num == 1),
             alpha=-math.inf, beta=math.inf)
-        print(eval_)
         return move
