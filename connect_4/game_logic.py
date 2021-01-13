@@ -53,7 +53,7 @@ class Board(np.ndarray):
         self._chip_idxs[chip].remove((row, column))
 
     def isfull(self) -> bool:
-        return self.all()  # type: ignore
+        return self.all() # type: ignore
 
     def copy(self):
         res = np.copy(self).view(Board)
@@ -64,7 +64,7 @@ class Board(np.ndarray):
 class Player(metaclass=ABCMeta):
     '''Parent class of any connect 4 player'''
 
-    def __init__(self, pnum: int, board: Board):
+    def __init__(self, pnum: int, board: Board, *args, **kwargs):
         self._num: int = pnum
         self._board: Board = board
 

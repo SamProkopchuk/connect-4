@@ -72,18 +72,18 @@ class MiniMaxAI(Player):
                 if maximize:
                     if weight > bestweight:
                         bestweight, bestmove = weight, move
-                    alpha = max(bestweight, alpha)
+                    alpha = max(bestweight, alpha) # type: ignore
                 else:
                     if weight < bestweight:
                         bestweight, bestmove = weight, move
-                    beta = min(bestweight, beta)
+                    beta = min(bestweight, beta) # type: ignore
                 if beta <= alpha:
                     break
         if bestmove is None:
             # This means no moves are valid aka the board is full.
             return 0, None
         else:
-            return bestweight, bestmove
+            return bestweight, bestmove # type: ignore
 
     def move(self):
         board = self._board.copy()
