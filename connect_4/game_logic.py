@@ -143,6 +143,8 @@ class Game:
             column = self._pnum2player[pnum].move()
             last_move = self._board.place_chip(pnum, column)
             if verbose:
+                print((f'Player {pnum} placed a chip in column {last_move[1]}' +
+                       f' -> row {last_move[0]}'))
                 print(self._board)
             if Game.is_winner(pnum, self._board):
                 self._winner = pnum
