@@ -129,7 +129,7 @@ class Game:
 
     @staticmethod
     def is_winner(pnum: int, board: Board) -> bool:
-        '''Returns static evaluation of a board given who's move it is'''
+        '''Determines whether pnum winning given a board position'''
         pchipidxs = board.chip_idxs[pnum]
         for r, c in pchipidxs:
             for dr, dc in ((0, 1), (1, 0), (1, 1), (-1, 1)):
