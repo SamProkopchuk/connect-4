@@ -1,0 +1,3 @@
+build --cxxopt="-std=c++2a" --host_cxxopt="-std=c++2a"
+
+build --copt="-fdiagnostics-color=always"

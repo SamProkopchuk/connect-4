@@ -1,0 +1,38 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+  name = "com_github_google_gtest",
+  urls = ["https://github.com/google/googletest/archive/5ab508a01f9eb089207ee87fd547d290da39d015.zip"],
+  strip_prefix = "googletest-5ab508a01f9eb089207ee87fd547d290da39d015",
+)
+
+http_archive(
+    name = "com_github_gflags_gflags",
+    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+    strip_prefix = "gflags-2.2.2",
+    urls = ["https://github.com/gflags/gflags/archive/v2.2.2.tar.gz"],
+)
+
+http_archive(
+    name = "com_github_google_glog",
+    sha256 = "122fb6b712808ef43fbf80f75c52a21c9760683dae470154f02bddfc61135022",
+    strip_prefix = "glog-0.6.0",
+    urls = ["https://github.com/google/glog/archive/v0.6.0.zip"],
+)
+
+http_archive(
+    name = "com_gitlab_libeigen_eigen",
+    sha256 = "8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72",
+    urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz"],
+    strip_prefix = "eigen-3.4.0",
+    build_file = "//third_party:eigen.BUILD",
+)
+
+http_archive(
+  name = "com_github_bab2min_eigenrand",
+  sha256 = "159c13b7602884957f51d59d7484d62d9e82e7d7bc8bebbaf2880b72cf24e867",
+  urls = ["https://github.com/bab2min/EigenRand/archive/refs/tags/v0.5.0.tar.gz"],
+  strip_prefix = "EigenRand-0.5.0",
+  build_file = "//third_party:eigenrand.BUILD",
+)
+
