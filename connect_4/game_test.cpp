@@ -52,8 +52,7 @@ TEST(GameTest, GetDropMaskTest) {
         col_indices.erase(col_indices.begin() + kI);
       }
       const uint64_t kDropMask = GetDropMask(board, kDropColIdx);
-      ASSERT_EQ(kDropMask, GetMask(kDropRowIdx, kDropColIdx))
-          << "num_chips: " << num_chips;
+      ASSERT_EQ(kDropMask, GetMask(kDropRowIdx, kDropColIdx));
       board |= kDropMask;
     }
     ASSERT_EQ(num_chips, kNumRows * kNumCols);
