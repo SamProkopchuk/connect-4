@@ -6,52 +6,141 @@
 
 namespace connect_4 {
 
-uint64_t GetColMask(int col) {
-  // assert(col >= 0 && col < kNumCols);
-  switch (col) {
-    case 0:
-      return kCol1Mask;
-      break;
-    case 1:
-      return kCol2Mask;
-      break;
-    case 2:
-      return kCol3Mask;
-      break;
-    case 3:
-      return kCol4Mask;
-      break;
-    case 4:
-      return kCol5Mask;
-      break;
-    case 5:
-      return kCol6Mask;
-      break;
-    case 6:
-      return kCol7Mask;
-      break;
-    default:
-      return 0;
-      break;
+namespace {
+
+bool IsVerticalWin(uint64_t pieces, int row, int col) {
+  if (row <= 2) {
+    // Check vertical.
+    const uint64_t kVerticalMask = 15ULL << (row + col * kNumRows);
+    if ((pieces & kVerticalMask) == kVerticalMask) {
+      return true;
+    }
   }
+  return false;
 }
 
-uint64_t GetMask(int row, int col) { return 1ULL << (col * kNumRows + row); }
+bool IsHorizontalWin(uint64_t pieces, int row, int col) {
+  // Check horizontal.
+  const uint64_t kMaskedRow = pieces & kRowMasks[row];
+  const int kMinCol = std::max(0, col - 3);
+  const int kMaxCol = std::min(col, kNumCols - 3);
+  for (int col = kMinCol; col <= kMaxCol; ++col) {
+    const uint64_t kHorizontalMask = 266305ULL << (row + col * kNumRows);
+    if ((kMaskedRow & kHorizontalMask) == kHorizontalMask) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The mask "0x204081ULL" represents:
+// 1000000
+// 0100000
+// 0010000
+// 0001000
+// 0000000
+// 0000000
+bool IsTLBRDiagonalWin(uint64_t pieces, int row, int col) {
+  // Check diagonal. [\]
+  const int kMinCol = std::max(0, col - 3);
+  const int kMinRow = std::max(0, row - 3);
+  const int kMaxCol = std::min(col - 3, kNumCols - 6) + 3;
+  const int kMaxRow = std::min(row - 3, kNumRows - 6) + 3;
+  const int kDelta0 = std::max(kMinCol - col, kMinRow - row);
+  const int kDeltaF = std::min(kMaxCol - col, kMaxRow - row);
+  for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
+    const int kRow = row + delta;
+    const int kCol = col + delta;
+    const uint64_t kMask = 0x204081ULL << (kCol * kNumRows + kRow);
+    if ((pieces & kMask) == kMask) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The mask "0x1084200000ULL" represents:
+// 0000001
+// 0000010
+// 0000100
+// 0001000
+// 0000000
+// 0000000
+bool IsBLTRDiagonalWin(uint64_t pieces, int row, int col) {
+  // Check diagonal. [/]
+
+  const int kMinCol = std::max(col - 3, 0) + 3;
+  const int kMinRow = std::max(row - 3, 0);
+  const int kMaxCol = std::min(col + 3, kNumCols - 1);
+  const int kMaxRow = std::min(row + 3, kNumRows - 1) - 3;
+  const int kDelta0 = std::max(kMinCol - col, row - kMaxRow);
+  const int kDeltaF = std::min(kMaxCol - col, row - kMinRow);
+  for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
+    const int kRow = row - delta;
+    const int kCol = col + delta;
+    const uint64_t kMask = 0x4210800000ULL >> (38 - (kCol * kNumRows + kRow));
+    if ((pieces & kMask) == kMask) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
 
 // Returns a mask of the piece position when dropped in the given column.
 // Board contains both players' pieces.
 uint64_t GetDropMask(uint64_t board, int col) {
-  const uint64_t kColMask = GetColMask(col);
-  const uint64_t kCol = board & kColMask;
+  const uint64_t kColMask = kColMasks[col];
+  const uint64_t kMaskedCol = board & kColMask;
   // Check there is at least one empty slot in the column.
-  assert(kCol != kColMask);
+  assert(kMaskedCol != kColMask);
   // Could probable use global constexprs for the 1 << (col * kNumRows) values.
-  return kCol == 0 ? 1ULL << (col * kNumRows + 5) : (kCol & (-kCol)) >> 1;
+  return kMaskedCol == 0 ? kColMask & kRowMasks[kNumRows - 1]
+                         : (kMaskedCol & (-kMaskedCol)) >> 1;
 }
 
-void Game::Play(int col, double ms_to_think) {
-  const uint64_t kPiecesMask = p1_board_ | p2_board_;
-  // assert((kPiecesMask & GetMask(0, col)) == 0);
+// Returns the row index of the last piece dropped in the given normalized col.
+// Normalized means it's at col 0.
+int GetRow(uint64_t normalized_piece_col) {
+  assert(normalized_piece_col != 0);
+  // Count leading zeros of the normalized column.
+  int leading_zeros = 0;
+  while ((normalized_piece_col & 1ULL) != 1ULL) {
+    normalized_piece_col >>= 1;
+    ++leading_zeros;
+  }
+  return leading_zeros;
+}
+
+bool IsWin(uint64_t pieces, const int kCol) {
+  const uint64_t kColMask = kColMasks[kCol];
+  const uint64_t kMaskedCol = pieces & kColMask;
+  const int kRow = GetRow(kMaskedCol >> (kCol * kNumRows));
+  return IsVerticalWin(pieces, kRow, kCol) ||
+         IsHorizontalWin(pieces, kRow, kCol) ||
+         IsTLBRDiagonalWin(pieces, kRow, kCol) ||
+         IsBLTRDiagonalWin(pieces, kRow, kCol);
+}
+
+GameResult Game::Play(int col) {
+  const uint64_t kBoard = p1_board_ | p2_board_;
+  const uint64_t kColMask = kColMasks[col];
+  // Check there is at least one empty slot in the column.
+  assert((kBoard & kColMask) != kColMask);
+
+  const uint64_t kDropMask = GetDropMask(kBoard, col);
+  p1_turn_ ? p1_board_ |= kDropMask : p2_board_ |= kDropMask;
+  p1_turn_ = !p1_turn_;
+  const uint64_t kNextBoard = p1_board_ | p2_board_;
+
+  if (IsWin(kNextBoard, col)) {
+    return p1_turn_ ? GameResult::kP2Win : GameResult::kP1Win;
+  } else if (kNextBoard == kFullBoard) {
+    return GameResult::kDraw;
+  } else {
+    return GameResult::kInProgress;
+  }
 }
 
 }  // namespace connect_4
