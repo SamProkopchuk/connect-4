@@ -11,7 +11,7 @@ namespace {
 bool IsVerticalWin(uint64_t pieces, int row, int col) {
   if (row <= 2) {
     // Check vertical.
-    const uint64_t kVerticalMask = 15ULL << (row + col * kNumRows);
+    const uint64_t kVerticalMask = 0xFULL << (row + col * kNumRows);
     if ((pieces & kVerticalMask) == kVerticalMask) {
       return true;
     }
@@ -25,7 +25,7 @@ bool IsHorizontalWin(uint64_t pieces, int row, int col) {
   const int kMinCol = std::max(0, col - 3);
   const int kMaxCol = std::min(col, kNumCols - 3);
   for (int col = kMinCol; col <= kMaxCol; ++col) {
-    const uint64_t kHorizontalMask = 266305ULL << (row + col * kNumRows);
+    const uint64_t kHorizontalMask = 0x41041ULL << (row + col * kNumRows);
     if ((kMaskedRow & kHorizontalMask) == kHorizontalMask) {
       return true;
     }
@@ -106,7 +106,7 @@ int GetRow(uint64_t normalized_piece_col) {
   assert(normalized_piece_col != 0);
   // Count leading zeros of the normalized column.
   int leading_zeros = 0;
-  while ((normalized_piece_col & 1ULL) != 1ULL) {
+  while ((normalized_piece_col & 0x1ULL) != 0x1ULL) {
     normalized_piece_col >>= 1;
     ++leading_zeros;
   }

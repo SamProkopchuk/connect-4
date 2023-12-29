@@ -120,7 +120,7 @@ TEST(GameTest, kColMasksTest) {
 }
 
 TEST(GameTest, kRowMasksTest) {
-  const uint64_t kFirstRowMask = 69810262081ULL;
+  const uint64_t kFirstRowMask = 0x1041041041ULL;
   for (int row = 0; row < kNumRows; ++row) {
     const uint64_t kExpected = kFirstRowMask << row;
     ASSERT_EQ(kRowMasks[row], kExpected);
@@ -132,7 +132,7 @@ TEST(GameTest, GetMaskTest) {
     for (int col = 0; col < kNumCols; ++col) {
       const uint64_t kMask = GetMask(row, col);
       const uint64_t kShifts = col * kNumRows + row;
-      const uint64_t kExpected = 1ULL << kShifts;
+      const uint64_t kExpected = 0x1ULL << kShifts;
       ASSERT_EQ(kMask, kExpected);
     }
   }
@@ -152,7 +152,7 @@ TEST(GameTest, GetDropMaskTest) {
   std::array<int, 5> random_seeds = {42, 43, 44, 45, 46};
   for (int seed : random_seeds) {
     std::mt19937 gen(seed);
-    int64_t board = 0ULL;
+    int64_t board = 0x0ULL;
     std::vector<int> col_indices(kNumCols);
     std::iota(col_indices.begin(), col_indices.end(), 0);
     std::array<int, kNumCols> chips_in_col = {};
@@ -186,7 +186,7 @@ TEST(GameTest, IsWinTest) {
     for (float p : kProbabilities) {
       std::bernoulli_distribution dis(p);
       for (int min_row = kNumRows - 1; min_row >= 0; --min_row) {
-        uint64_t board = 0ULL;
+        uint64_t board = 0x0ULL;
         for (int col = 0; col < kNumCols; ++col) {
           for (int row = min_row; row < kNumRows; ++row) {
             if (dis(gen)) {
