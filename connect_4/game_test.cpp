@@ -1,4 +1,4 @@
-#include "game.h"
+#include "connect_4/game.h"
 
 #include <bitset>
 #include <random>

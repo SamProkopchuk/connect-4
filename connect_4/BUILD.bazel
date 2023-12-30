@@ -41,5 +41,6 @@ cc_library(
     srcs = ["ai_minimax.cpp"],
     deps = [
       ":util",
+      ":game",
     ],
 )

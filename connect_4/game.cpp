@@ -1,8 +1,10 @@
-#include "game.h"
+#include "connect_4/game.h"
 
 #include <cassert>
 
 #include "glog/logging.h"
+
+#include "connect_4/util.h"
 
 namespace connect_4 {
 

@@ -1,4 +1,4 @@
-#include "util.h"
+#include "connect_4/util.h"
 
 #include <algorithm>
 #include <cassert>
