@@ -10,7 +10,6 @@ namespace connect_4 {
 namespace {
 
 TEST(AIMinimaxTest, MinimaxTest) {
-  constexpr int kDepth = 2;
   Game game;
   for (int i = 0; i < 3; ++i) {
     game.Play(1);
@@ -18,9 +17,9 @@ TEST(AIMinimaxTest, MinimaxTest) {
       game.Play(0);
     }
   }
-  AIMinimax ai(game, kDepth);
-  const int kMove = ai.GetMove();
-  ASSERT_EQ(kMove, 1);
+  for (int depth = 2; depth < 10; ++depth) {
+    ASSERT_EQ(AIMinimax(game, depth).GetMove(), 1);
+  }
 }
 
 }  // namespace

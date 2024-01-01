@@ -2,6 +2,7 @@
 #define CONNECT_4_GAME_H_
 
 #include <cstdint>
+#include <ostream>
 
 namespace connect_4 {
 
@@ -24,6 +25,8 @@ class Game {
   constexpr bool IsP1Turn() const { return is_p1_turn_; }
 
  private:
+  friend std::ostream& operator<<(std::ostream& kStream, const Game& kGame);
+
   uint64_t p1_board_;
   uint64_t p2_board_;
   uint64_t board_;

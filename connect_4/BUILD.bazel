@@ -54,3 +54,14 @@ cc_test(
       "@com_github_google_gtest//:gtest_main",
     ]
 )
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    deps = [
+      ":ai_minimax",
+      ":game",
+      ":util"
+    ]
+)
+

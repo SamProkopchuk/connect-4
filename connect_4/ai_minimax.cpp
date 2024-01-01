@@ -61,7 +61,7 @@ float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
       }
       Game game(kGame);
       if (game.Play(col) == GameResult::kP1Win) {
-        return 1.0;
+        return 1.0 + 1e-4 * kDepth;
       }
       value = std::max(value, Minimax(game, kDepth - 1, alpha, beta));
       alpha = std::max(alpha, value);
@@ -78,7 +78,7 @@ float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
       }
       Game game(kGame);
       if (game.Play(col) == GameResult::kP2Win) {
-        return -1.0;
+        return -1.0 - 1e-4 * kDepth;
       }
       value = std::min(value, Minimax(game, kDepth - 1, alpha, beta));
       beta = std::min(beta, value);
