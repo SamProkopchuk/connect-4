@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <random>
 
 #include "connect_4/util.h"
 
@@ -13,8 +14,11 @@ int AIMinimax::GetMove() {
   int best_col = -1;
   float alpha = std::numeric_limits<float>::lowest();
   float beta = std::numeric_limits<float>::max();
+  std::vector<int> cols(kNumCols);
+  std::iota(cols.begin(), cols.end(), 0);
+  std::shuffle(cols.begin(), cols.end(), std::mt19937(std::random_device()()));
   if (kGame_.IsP1Turn()) {
-    for (int col = 0; col < kNumCols; ++col) {
+    for (int col : cols) {
       if (IsColFull(kGame_.GetBoard(), col)) {
         continue;
       }
@@ -29,7 +33,7 @@ int AIMinimax::GetMove() {
       }
     }
   } else {
-    for (int col = 0; col < kNumCols; ++col) {
+    for (int col : cols) {
       if (IsColFull(kGame_.GetBoard(), col)) {
         continue;
       }
@@ -52,10 +56,13 @@ float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
   if (kDepth == 0 || kGame.GetBoard() == kFullBoard) {
     return 0;
   }
+  std::vector<int> cols(kNumCols);
+  std::iota(cols.begin(), cols.end(), 0);
+  std::shuffle(cols.begin(), cols.end(), std::mt19937(std::random_device()()));
   if (kGame.IsP1Turn()) {
     // P1 is maximizing.
     float value = std::numeric_limits<float>::lowest();
-    for (int col = 0; col < kNumCols; ++col) {
+    for (int col : cols) {
       if (IsColFull(kGame.GetBoard(), col)) {
         continue;
       }
@@ -72,7 +79,7 @@ float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
     return value;
   } else {
     float value = std::numeric_limits<int>::max();
-    for (int col = 0; col < kNumCols; ++col) {
+    for (int col : cols) {
       if (IsColFull(kGame.GetBoard(), col)) {
         continue;
       }

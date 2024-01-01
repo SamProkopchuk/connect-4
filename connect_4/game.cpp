@@ -9,18 +9,20 @@ namespace connect_4 {
 
 std::ostream& operator<<(std::ostream& kStream, const Game& kGame) {
   std::string res;
-  for (int row=0; row<kNumRows; ++row) {
-    for (int col=0; col<kNumCols; ++col) {
+  for (int row = 0; row < kNumRows; ++row) {
+    for (int col = 0; col < kNumCols; ++col) {
       const uint64_t kMask = GetMask(row, col);
       if ((kGame.p1_board_ & kMask) != 0) {
-        res += "1";
+        res += "X";
       } else if ((kGame.p2_board_ & kMask) != 0) {
-        res += "2";
+        res += "O";
       } else {
-        res += "0";
+        res += "_";
       }
     }
-    res += "\n";
+    if (row != kNumRows - 1) {
+      res += "\n";
+    }
   }
   return kStream << res;
 }
@@ -31,7 +33,7 @@ GameResult Game::Play(int kCol) {
   assert((board_ & kColMask) != kColMask);
 
   const uint64_t kDropMask = GetDropMask(board_, kCol);
-  uint64_t &p_board = is_p1_turn_ ? p1_board_ : p2_board_;
+  uint64_t& p_board = is_p1_turn_ ? p1_board_ : p2_board_;
   p_board |= kDropMask;
   board_ |= kDropMask;
   is_p1_turn_ = !is_p1_turn_;
@@ -46,4 +48,3 @@ GameResult Game::Play(int kCol) {
 }
 
 }  // namespace connect_4
-

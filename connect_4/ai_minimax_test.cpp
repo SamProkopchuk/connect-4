@@ -25,4 +25,3 @@ TEST(AIMinimaxTest, MinimaxTest) {
 }  // namespace
 
 }  // namespace connect_4
-
