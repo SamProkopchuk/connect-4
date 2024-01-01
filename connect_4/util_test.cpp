@@ -4,6 +4,7 @@
 #include <bitset>
 #include <random>
 
+#include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace connect_4 {
@@ -189,6 +190,39 @@ TEST(GameTest, IsWinTest) {
           }
         }
       }
+    }
+  }
+}
+
+TEST(GameTest, IsWinTest2) {
+  const std::string kBoardStr =
+      "1011200\n2021100\n1011200\n2022100\n2211211\n2221122";
+  const std::string delim = "\n";
+  uint64_t p1_board = 0x0ULL;
+  uint64_t p2_board = 0x0ULL;
+  int last = 0;
+  int next = 0;
+  for (int row = 0; row < kNumRows; ++row) {
+    next = kBoardStr.find(delim, last);
+    const std::string kRowStr = kBoardStr.substr(last, next - last);
+    last = next + 1;
+    for (int col = 0; col < kNumCols; ++col) {
+      const uint64_t kMask = GetMask(row, col);
+      if (kRowStr[col] == '1') {
+        p1_board |= kMask;
+      } else if (kRowStr[col] == '2') {
+        p2_board |= kMask;
+      } else {
+        assert(kRowStr[col] == '0');
+      }
+    }
+  }
+  for (int col = 0; col < kNumCols; ++col) {
+    if (p1_board & kColMasks[col]) {
+      ASSERT_FALSE(IsWin(p1_board, col));
+    }
+    if (p2_board & kColMasks[col]) {
+      ASSERT_FALSE(IsWin(p2_board, col));
     }
   }
 }
