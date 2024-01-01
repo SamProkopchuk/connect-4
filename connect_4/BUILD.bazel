@@ -30,6 +30,7 @@ cc_test(
     srcs = ["game_test.cpp"],
     deps = [
         ":game",
+        ":util",
         "@com_github_google_glog//:glog",
         "@com_github_google_gtest//:gtest_main",
     ],
@@ -43,4 +44,13 @@ cc_library(
       ":util",
       ":game",
     ],
+)
+
+cc_test(
+    name = "ai_minimax_test",
+    srcs = ["ai_minimax_test.cpp"],
+    deps = [
+      ":ai_minimax",
+      "@com_github_google_gtest//:gtest_main",
+    ]
 )

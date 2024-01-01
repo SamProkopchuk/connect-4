@@ -7,16 +7,15 @@ namespace connect_4 {
 
 class AIMinimax {
  public:
-  AIMinimax(const int kDepth, const Game& kGame)
-      : kDepth_(kDepth), kGame_(kGame) {}
+  AIMinimax(const Game& kGame, const int kDepth)
+      : kGame_(kGame), kDepth_(kDepth) {}
 
   int GetMove();
 
  private:
-  float Minimax(const int kDepth, float alpha, float beta,
-                const bool kIsP1Turn);
-  const int kDepth_;
+  float Minimax(const Game& kGame, const int kDepth, float alpha, float beta);
   const Game& kGame_;
+  const int kDepth_;
 };
 
 }  // namespace connect_4

@@ -10,19 +10,6 @@ namespace connect_4 {
 
 namespace {
 
-std::string BoardToString(const uint64_t kBoard) {
-  std::string res;
-  for (int row = 0; row < kNumRows; ++row) {
-    for (int col = 0; col < kNumCols; ++col) {
-      res += (kBoard & GetMask(row, col)) ? "X" : "O";
-    }
-    if (row != kNumRows - 1) {
-      res += "\n";
-    }
-  }
-  return res;
-}
-
 // A less efficient version of IsWin() for testing.
 bool IsWinTest(const uint64_t kBoard, const int kRow, const int kCol) {
   if (!(kBoard & GetMask(kRow, kCol))) {

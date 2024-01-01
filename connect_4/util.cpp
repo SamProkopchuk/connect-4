@@ -43,8 +43,8 @@ bool IsTLBRDiagonalWin(uint64_t pieces, int row, int col) {
   // Check diagonal. [\]
   const int kMinCol = std::max(0, col - 3);
   const int kMinRow = std::max(0, row - 3);
-  const int kMaxCol = std::min(col - 3, kNumCols - 6) + 3;
-  const int kMaxRow = std::min(row - 3, kNumRows - 6) + 3;
+  const int kMaxCol = std::min(col, kNumCols - 3);
+  const int kMaxRow = std::min(row, kNumRows - 3);
   const int kDelta0 = std::max(kMinCol - col, kMinRow - row);
   const int kDeltaF = std::min(kMaxCol - col, kMaxRow - row);
   for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
@@ -71,7 +71,7 @@ bool IsBLTRDiagonalWin(uint64_t pieces, int row, int col) {
   const int kMinCol = std::max(col - 3, 0) + 3;
   const int kMinRow = std::max(row - 3, 0);
   const int kMaxCol = std::min(col + 3, kNumCols - 1);
-  const int kMaxRow = std::min(row + 3, kNumRows - 1) - 3;
+  const int kMaxRow = std::min(row, kNumRows - 4);
   const int kDelta0 = std::max(kMinCol - col, row - kMaxRow);
   const int kDeltaF = std::min(kMaxCol - col, row - kMinRow);
   for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
@@ -86,6 +86,19 @@ bool IsBLTRDiagonalWin(uint64_t pieces, int row, int col) {
 }
 
 }  // namespace
+
+std::string BoardToString(const uint64_t kBoard) {
+  std::string res;
+  for (int row = 0; row < kNumRows; ++row) {
+    for (int col = 0; col < kNumCols; ++col) {
+      res += (kBoard & GetMask(row, col)) ? "X" : "O";
+    }
+    if (row != kNumRows - 1) {
+      res += "\n";
+    }
+  }
+  return res;
+}
 
 // Returns a mask of the piece position when dropped in the given column.
 // Board contains both players' pieces.

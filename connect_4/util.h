@@ -2,6 +2,7 @@
 #define CONNECT4_UTIL_H_
 
 #include <cstdint>
+#include <string>
 
 namespace connect_4 {
 
@@ -52,6 +53,8 @@ constexpr bool IsColFull(const uint64_t kBoard, const int kCol) {
 constexpr uint64_t GetMask(const int kRow, const int kCol) {
   return 1ULL << (kCol * kNumRows + kRow);
 }
+
+std::string BoardToString(const uint64_t kBoard);
 
 // Returns a mask of the piece position when dropped in the given column.
 // Board contains both players' pieces.
