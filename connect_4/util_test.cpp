@@ -4,7 +4,6 @@
 #include <bitset>
 #include <random>
 
-#include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace connect_4 {
