@@ -7,24 +7,24 @@ namespace connect_4 {
 
 namespace {
 
-bool IsVerticalWin(uint64_t pieces, int row, int col) {
-  if (row <= 2) {
+bool IsVerticalWin(const uint64_t kPieces, const int kRow, const int kCol) {
+  if (kRow <= 2) {
     // Check vertical.
-    const uint64_t kVerticalMask = 0xFULL << (row + col * kNumRows);
-    if ((pieces & kVerticalMask) == kVerticalMask) {
+    const uint64_t kVerticalMask = 0xFULL << (kRow + kCol * kNumRows);
+    if ((kPieces & kVerticalMask) == kVerticalMask) {
       return true;
     }
   }
   return false;
 }
 
-bool IsHorizontalWin(uint64_t pieces, int row, int col) {
+bool IsHorizontalWin(const uint64_t kPieces, const int kRow, const int kCol) {
   // Check horizontal.
-  const uint64_t kMaskedRow = pieces & kRowMasks[row];
-  const int kMinCol = std::max(0, col - 3);
-  const int kMaxCol = std::min(col, kNumCols - 3);
-  for (int col = kMinCol; col <= kMaxCol; ++col) {
-    const uint64_t kHorizontalMask = 0x41041ULL << (row + col * kNumRows);
+  const uint64_t kMaskedRow = kPieces & kRowMasks[kRow];
+  const int kMinCol = std::max(0, kCol - 3);
+  const int kMaxCol = std::min(kCol, kNumCols - 3);
+  for (int kCol = kMinCol; kCol <= kMaxCol; ++kCol) {
+    const uint64_t kHorizontalMask = 0x41041ULL << (kRow + kCol * kNumRows);
     if ((kMaskedRow & kHorizontalMask) == kHorizontalMask) {
       return true;
     }
@@ -39,46 +39,47 @@ bool IsHorizontalWin(uint64_t pieces, int row, int col) {
 // 0001000
 // 0000000
 // 0000000
-bool IsTLBRDiagonalWin(uint64_t pieces, int row, int col) {
+bool IsTLBRDiagonalWin(const uint64_t kPieces, const int kRow,
+                                 const int kCol) {
   // Check diagonal. [\]
-  const int kMinCol = std::max(0, col - 3);
-  const int kMinRow = std::max(0, row - 3);
-  const int kMaxCol = std::min(col, kNumCols - 4);
-  const int kMaxRow = std::min(row, kNumRows - 4);
-  const int kDelta0 = std::max(kMinCol - col, kMinRow - row);
-  const int kDeltaF = std::min(kMaxCol - col, kMaxRow - row);
+  const int kMinCol = std::max(0, kCol - 3);
+  const int kMinRow = std::max(0, kRow - 3);
+  const int kMaxCol = std::min(kCol, kNumCols - 4);
+  const int kMaxRow = std::min(kRow, kNumRows - 4);
+  const int kDelta0 = std::max(kMinCol - kCol, kMinRow - kRow);
+  const int kDeltaF = std::min(kMaxCol - kCol, kMaxRow - kRow);
   for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
-    const int kRow = row + delta;
-    const int kCol = col + delta;
-    const uint64_t kMask = 0x204081ULL << (kCol * kNumRows + kRow);
-    if ((pieces & kMask) == kMask) {
+    const int kCurrRow = kRow + delta;
+    const int kCurrCol = kCol + delta;
+    const uint64_t kMask = 0x204081ULL << (kCurrCol * kNumRows + kCurrRow);
+    if ((kPieces & kMask) == kMask) {
       return true;
     }
   }
   return false;
 }
 
-// The mask "0x1084200000ULL" represents:
+// The mask "0x4210800000ULL" represents:
+// 0000000
+// 0000000
 // 0000001
 // 0000010
 // 0000100
 // 0001000
-// 0000000
-// 0000000
-bool IsBLTRDiagonalWin(uint64_t pieces, int row, int col) {
+bool IsBLTRDiagonalWin(const uint64_t kPieces, const int kRow, const int kCol) {
   // Check diagonal. [/]
-
-  const int kMinCol = std::max(col - 3, 0) + 3;
-  const int kMinRow = std::max(row - 3, 0);
-  const int kMaxCol = std::min(col + 3, kNumCols - 1);
-  const int kMaxRow = std::min(row, kNumRows - 4);
-  const int kDelta0 = std::max(kMinCol - col, row - kMaxRow);
-  const int kDeltaF = std::min(kMaxCol - col, row - kMinRow);
+  const int kMinCol = std::max(kCol, 3);
+  const int kMinRow = std::max(kRow - 3, 0);
+  const int kMaxCol = std::min(kCol + 3, kNumCols - 1);
+  const int kMaxRow = std::min(kRow, kNumRows - 4);
+  const int kDelta0 = std::max(kMinCol - kCol, kRow - kMaxRow);
+  const int kDeltaF = std::min(kMaxCol - kCol, kRow - kMinRow);
   for (int delta = kDelta0; delta <= kDeltaF; ++delta) {
-    const int kRow = row - delta;
-    const int kCol = col + delta;
-    const uint64_t kMask = 0x4210800000ULL >> (38 - (kCol * kNumRows + kRow));
-    if ((pieces & kMask) == kMask) {
+    const int kCurrRow = kRow - delta;
+    const int kCurrCol = kCol + delta;
+    const uint64_t kMask =
+        0x4210800000ULL >> (38 - (kCurrCol * kNumRows + kCurrRow));
+    if ((kPieces & kMask) == kMask) {
       return true;
     }
   }
@@ -114,25 +115,19 @@ uint64_t GetDropMask(uint64_t board, int col) {
 
 // Returns the row index of the last piece dropped in the given normalized col.
 // Normalized means it's at col 0.
-int GetRow(uint64_t normalized_piece_col) {
-  assert(normalized_piece_col != 0);
-  // Count leading zeros of the normalized column.
-  int leading_zeros = 0;
-  while ((normalized_piece_col & 0x1ULL) != 0x1ULL) {
-    normalized_piece_col >>= 1;
-    ++leading_zeros;
-  }
-  return leading_zeros;
+int GetRow(const uint64_t kMaskedCol) {
+  assert(kMaskedCol != 0);
+  return std::countr_zero(kMaskedCol) % kNumRows;
 }
 
-bool IsWin(uint64_t pieces, const int kCol) {
+bool IsWin(const uint64_t kPieces, const int kCol) {
   const uint64_t kColMask = kColMasks[kCol];
-  const uint64_t kMaskedCol = pieces & kColMask;
-  const int kRow = GetRow(kMaskedCol >> (kCol * kNumRows));
-  return IsVerticalWin(pieces, kRow, kCol) ||
-         IsHorizontalWin(pieces, kRow, kCol) ||
-         IsTLBRDiagonalWin(pieces, kRow, kCol) ||
-         IsBLTRDiagonalWin(pieces, kRow, kCol);
+  const uint64_t kMaskedCol = kPieces & kColMask;
+  const int kRow = GetRow(kMaskedCol);
+  return IsVerticalWin(kPieces, kRow, kCol) ||
+         IsHorizontalWin(kPieces, kRow, kCol) ||
+         IsTLBRDiagonalWin(kPieces, kRow, kCol) ||
+         IsBLTRDiagonalWin(kPieces, kRow, kCol);
 }
 
 }  // namespace connect_4

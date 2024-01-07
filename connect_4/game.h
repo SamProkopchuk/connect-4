@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <ostream>
 
+#include "connect_4/util.h"
+
 namespace connect_4 {
 
 enum class GameResult { kP1Win, kP2Win, kDraw, kInProgress };
@@ -19,10 +21,18 @@ class Game {
         is_p1_turn_(kGame.is_p1_turn_) {}
   GameResult Play(const int kCol);
 
-  constexpr uint64_t GetP1Board() const { return p1_board_; }
-  constexpr uint64_t GetP2Board() const { return p2_board_; }
-  constexpr uint64_t GetBoard() const { return board_; }
-  constexpr bool IsP1Turn() const { return is_p1_turn_; }
+  [[nodiscard]] constexpr uint64_t GetP1Board() const { return p1_board_; }
+  [[nodiscard]] constexpr uint64_t GetP2Board() const { return p2_board_; }
+  [[nodiscard]] constexpr uint64_t GetBoard() const { return board_; }
+  [[nodiscard]] constexpr bool IsP1Turn() const { return is_p1_turn_; }
+  constexpr void Undo(const int kCol) {
+    const uint64_t kMaskedCol = board_ & kColMasks[kCol];
+    const uint64_t kLastPiece = kMaskedCol & -kMaskedCol;
+    p1_board_ &= ~kLastPiece;
+    p2_board_ &= ~kLastPiece;
+    board_ &= ~kLastPiece;
+    is_p1_turn_ = !is_p1_turn_;
+  }
 
  private:
   friend std::ostream& operator<<(std::ostream& kStream, const Game& kGame);

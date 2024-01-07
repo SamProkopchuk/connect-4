@@ -13,7 +13,7 @@ class AIMinimax {
   int GetMove();
 
  private:
-  float Minimax(const Game& kGame, const int kDepth, float alpha, float beta);
+  float Minimax(Game& game, const int kDepth, float alpha, float beta);
   const Game& kGame_;
   const int kDepth_;
 };

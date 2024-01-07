@@ -16,7 +16,7 @@ using CumulativeResults = std::map<GameState, CumulativeResult>;
 }  // namespace
 
 int main(int arc, char** argv) {
-  constexpr int kDepth = 10;
+  constexpr int kDepth = 14;
   constexpr int kNumTrials = 1;
   CumulativeResults cumulative_results;
   for (int i = 0; i < kNumTrials; ++i) {

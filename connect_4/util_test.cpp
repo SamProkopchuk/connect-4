@@ -5,6 +5,7 @@
 #include <random>
 
 #include "gtest/gtest.h"
+#include "glog/logging.h"
 
 namespace connect_4 {
 
@@ -128,7 +129,7 @@ TEST(GameTest, GetRowTest) {
   for (int col = 0; col < kNumCols; ++col) {
     for (int row = 0; row < kNumRows; ++row) {
       const uint64_t kMask = GetMask(row, col);
-      const int kRow = GetRow(kMask >> col * kNumRows);
+      const int kRow = GetRow(kMask);
       ASSERT_EQ(kRow, row);
     }
   }
@@ -183,6 +184,10 @@ TEST(GameTest, IsWinTest) {
         for (int col = 0; col < kNumCols; ++col) {
           for (int row = 0; row < kNumRows; ++row) {
             if (board & GetMask(row, col)) {
+              if (IsWin(board, col) != IsWinTest(board, row, col)) {
+                LOG(INFO) << "board:\n" << BoardToString(board);
+                LOG(INFO) << "row: " << row << ", col: " << col;
+              }
               ASSERT_EQ(IsWin(board, col), IsWinTest(board, row, col));
               break;
             }
@@ -221,6 +226,7 @@ TEST(GameTest, IsWinTest2) {
       ASSERT_FALSE(IsWin(p1_board, col));
     }
     if (p2_board & kColMasks[col]) {
+
       ASSERT_FALSE(IsWin(p2_board, col));
     }
   }

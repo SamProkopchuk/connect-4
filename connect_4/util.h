@@ -60,9 +60,9 @@ std::string BoardToString(const uint64_t kBoard);
 // Board contains both players' pieces.
 uint64_t GetDropMask(uint64_t board, int col);
 
-int GetRow(uint64_t normalized_piece_col);
+int GetRow(const uint64_t kMaskedCol);
 
-bool IsWin(uint64_t pieces, int col);
+bool IsWin(const uint64_t kPieces, const int kCol);
 
 }  // namespace connect_4
 

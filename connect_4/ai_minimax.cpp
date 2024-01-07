@@ -14,34 +14,32 @@ int AIMinimax::GetMove() {
   int best_col = -1;
   float alpha = std::numeric_limits<float>::lowest();
   float beta = std::numeric_limits<float>::max();
-  std::vector<int> cols(kNumCols);
-  std::iota(cols.begin(), cols.end(), 0);
-  std::shuffle(cols.begin(), cols.end(), std::mt19937(std::random_device()()));
-  if (kGame_.IsP1Turn()) {
-    for (int col : cols) {
+  Game game(kGame_);
+  if (game.IsP1Turn()) {
+    for (int col = 0; col < kNumCols; ++col) {
       if (IsColFull(kGame_.GetBoard(), col)) {
         continue;
       }
-      Game game(kGame_);
       if (game.Play(col) == GameResult::kP1Win) {
         return col;
       }
       const float kValue = Minimax(game, kDepth_ - 1, alpha, beta);
+      game.Undo(col);
       if (kValue > alpha) {
         best_col = col;
         alpha = kValue;
       }
     }
   } else {
-    for (int col : cols) {
+    for (int col = 0; col < kNumCols; ++col) {
       if (IsColFull(kGame_.GetBoard(), col)) {
         continue;
       }
-      Game game(kGame_);
       if (game.Play(col) == GameResult::kP2Win) {
         return col;
       }
       const float kValue = Minimax(game, kDepth_ - 1, alpha, beta);
+      game.Undo(col);
       if (kValue < beta) {
         best_col = col;
         beta = kValue;
@@ -51,26 +49,24 @@ int AIMinimax::GetMove() {
   return best_col;
 }
 
-float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
+float AIMinimax::Minimax(Game& game, const int kDepth, float alpha,
                          float beta) {
-  if (kDepth == 0 || kGame.GetBoard() == kFullBoard) {
+  if (kDepth == 0 || game.GetBoard() == kFullBoard) {
     return 0;
   }
-  std::vector<int> cols(kNumCols);
-  std::iota(cols.begin(), cols.end(), 0);
-  std::shuffle(cols.begin(), cols.end(), std::mt19937(std::random_device()()));
-  if (kGame.IsP1Turn()) {
+  if (game.IsP1Turn()) {
     // P1 is maximizing.
     float value = std::numeric_limits<float>::lowest();
-    for (int col : cols) {
-      if (IsColFull(kGame.GetBoard(), col)) {
+    for (int col = 0; col < kNumCols; ++col) {
+      if (IsColFull(game.GetBoard(), col)) {
         continue;
       }
-      Game game(kGame);
       if (game.Play(col) == GameResult::kP1Win) {
+        game.Undo(col);
         return 1.0 + 1e-4 * kDepth;
       }
       value = std::max(value, Minimax(game, kDepth - 1, alpha, beta));
+      game.Undo(col);
       alpha = std::max(alpha, value);
       if (alpha >= beta) {
         break;
@@ -79,15 +75,16 @@ float AIMinimax::Minimax(const Game& kGame, const int kDepth, float alpha,
     return value;
   } else {
     float value = std::numeric_limits<int>::max();
-    for (int col : cols) {
-      if (IsColFull(kGame.GetBoard(), col)) {
+    for (int col = 0; col < kNumCols; ++col) {
+      if (IsColFull(game.GetBoard(), col)) {
         continue;
       }
-      Game game(kGame);
       if (game.Play(col) == GameResult::kP2Win) {
+        game.Undo(col);
         return -1.0 - 1e-4 * kDepth;
       }
       value = std::min(value, Minimax(game, kDepth - 1, alpha, beta));
+      game.Undo(col);
       beta = std::min(beta, value);
       if (alpha >= beta) {
         break;

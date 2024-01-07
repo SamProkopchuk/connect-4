@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& kStream, const Game& kGame) {
       } else if ((kGame.p2_board_ & kMask) != 0) {
         res += "O";
       } else {
-        res += "_";
+        res += ".";
       }
     }
     if (row != kNumRows - 1) {
@@ -28,9 +28,11 @@ std::ostream& operator<<(std::ostream& kStream, const Game& kGame) {
 }
 
 GameResult Game::Play(int kCol) {
+#ifndef NDEBUG
   const uint64_t kColMask = kColMasks[kCol];
   // Check there is at least one empty slot in the column.
   assert((board_ & kColMask) != kColMask);
+#endif
 
   const uint64_t kDropMask = GetDropMask(board_, kCol);
   uint64_t& p_board = is_p1_turn_ ? p1_board_ : p2_board_;
